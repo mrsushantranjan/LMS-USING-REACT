@@ -79,10 +79,10 @@ const Course = mongoose.models.Course || mongoose.model("Course", courseSchema);
 // ── Enrollment Model ──────────────────────────────────────────────────────────
 const enrollmentSchema = new mongoose.Schema(
   {
-    user:      { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    course:    { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true },
+    user:       { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    course:     { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true },
     enrolledAt: { type: Date, default: Date.now },
-    progress:  { type: Number, default: 0 },
+    progress:   { type: Number, default: 0 },
   },
   { timestamps: true }
 );
@@ -93,7 +93,7 @@ const Enrollment = mongoose.models.Enrollment || mongoose.model("Enrollment", en
 
 app.get("/", (req, res) => res.send("API is running..."));
 
-// Auth Sync — save/update user in DB
+// Auth Sync
 app.post("/api/auth/sync", async (req, res) => {
   try {
     const { clerkId, name, email, avatar } = req.body;
@@ -169,7 +169,6 @@ app.post("/api/courses/:id/enroll", async (req, res) => {
     const course = await Course.findById(courseId);
     if (!course) return res.status(404).json({ message: "Course not found" });
 
-    // Already enrolled
     const existing = await Enrollment.findOne({ user: user._id, course: courseId });
     if (existing)
       return res.status(200).json({ success: true, message: "Already enrolled", enrollment: existing });
@@ -215,6 +214,55 @@ app.get("/api/users/:clerkId/enrollments", async (req, res) => {
     res.json(enrollments);
   } catch (error) {
     res.status(500).json({ message: "Error fetching enrollments", error: error.message });
+  }
+});
+
+// ── Payment Routes ────────────────────────────────────────────────────────────
+
+// Create mock order
+app.post("/api/payment/create-order", async (req, res) => {
+  try {
+    const { courseId } = req.body;
+    if (!courseId) return res.status(400).json({ message: "courseId is required" });
+
+    const course = await Course.findById(courseId);
+    if (!course) return res.status(404).json({ message: "Course not found" });
+
+    const amount  = course.price?.sale || course.price?.original || 0;
+    const orderId = `order_${Date.now()}_${courseId}`;
+
+    console.log(`📦 Order created: ${orderId} — ₹${amount} for "${course.title}"`);
+    res.json({ success: true, orderId, amount, courseId });
+  } catch (error) {
+    console.error("Error creating order:", error);
+    res.status(500).json({ message: "Error creating order", error: error.message });
+  }
+});
+
+// Verify payment + auto-enroll user
+app.post("/api/payment/verify", async (req, res) => {
+  try {
+    const { orderId, courseId, clerkId } = req.body;
+    if (!orderId || !courseId) return res.status(400).json({ message: "orderId and courseId are required" });
+
+    // Auto-enroll user after successful payment
+    if (clerkId) {
+      const user = await User.findOne({ clerkId });
+      if (user) {
+        const existing = await Enrollment.findOne({ user: user._id, course: courseId });
+        if (!existing) {
+          await Enrollment.create({ user: user._id, course: courseId });
+          await Course.findByIdAndUpdate(courseId, { $inc: { totalStudents: 1 } });
+          await User.findByIdAndUpdate(user._id, { $addToSet: { enrollments: courseId } });
+          console.log(`✅ Payment verified & enrolled: ${user.email}`);
+        }
+      }
+    }
+
+    res.json({ success: true, message: "Payment verified and enrollment complete", orderId });
+  } catch (error) {
+    console.error("Error verifying payment:", error);
+    res.status(500).json({ message: "Error verifying payment", error: error.message });
   }
 });
 
