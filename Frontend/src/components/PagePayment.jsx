@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useUser } from "@clerk/clerk-react";
+import useAuth from "../hooks/useAuth";
 import { CheckCircle, Lock, CreditCard, ArrowLeft, BookOpen, Shield } from "lucide-react";
 
 // ✅ FIX 1: Use correct port 8000
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
 const getToken = async () => {
-  try { return await window.Clerk?.session?.getToken(); } catch { return null; }
+  return localStorage.getItem("lms_token");
 };
 
 const PaymentPage = () => {
   const { id }        = useParams();
   const navigate      = useNavigate();
-  const { isSignedIn, user } = useUser();
+  const { isSignedIn, user } = useAuth();
 
   const [course,    setCourse]    = useState(null);
   const [loading,   setLoading]   = useState(true);

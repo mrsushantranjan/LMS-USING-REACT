@@ -1,41 +1,48 @@
-const { ClerkExpressRequireAuth, ClerkExpressWithAuth } = require("@clerk/clerk-sdk-node");
-const User = require("../models/user");
+import jwt  from "jsonwebtoken";
+import User from "../models/user.js";
 
-// ─── REQUIRE AUTH — use on protected routes ───────────────────────────────────
-const requireAuth = ClerkExpressRequireAuth();
-
-// ─── OPTIONAL AUTH — use on public routes ────────────────────────────────────
-const withAuth = ClerkExpressWithAuth();
-
-// ─── SYNC USER — run after requireAuth ───────────────────────────────────────
-// Finds or creates the user in MongoDB after Clerk verifies the token
-const syncUser = async (req, res, next) => {
+// ─── REQUIRE AUTH ─────────────────────────────────────────────────────────────
+export const requireAuth = async (req, res, next) => {
   try {
-    const clerkId = req.auth?.userId;
-
-    if (!clerkId) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
+    const header = req.headers.authorization;
+    if (!header || !header.startsWith("Bearer ")) {
+      return res.status(401).json({ success: false, message: "No token provided" });
     }
 
-    // Find existing user or create new one
-    let user = await User.findOne({ clerkId });
+    const token   = header.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    const user = await User.findById(decoded.userId);
     if (!user) {
-      user = await User.create({
-        clerkId,
-        name:  req.auth?.sessionClaims?.name  || "User",
-        email: req.auth?.sessionClaims?.email || `${clerkId}@temp.com`,
-        role:  "student",
-      });
-      console.log(`✅ New user created in MongoDB: ${clerkId}`);
+      return res.status(401).json({ success: false, message: "User not found" });
+    }
+    if (!user.isActive) {
+      return res.status(403).json({ success: false, message: "Account deactivated" });
     }
 
     req.user = user;
     next();
   } catch (error) {
-    console.error("syncUser error:", error.message);
-    res.status(500).json({ success: false, message: "Auth sync failed" });
+    return res.status(401).json({ success: false, message: "Invalid or expired token" });
   }
 };
 
-module.exports = { requireAuth, withAuth, syncUser };
+// ─── OPTIONAL AUTH ────────────────────────────────────────────────────────────
+// Attaches user if token present — does NOT block unauthenticated requests
+export const withAuth = async (req, res, next) => {
+  try {
+    const header = req.headers.authorization;
+    if (header && header.startsWith("Bearer ")) {
+      const token   = header.split(" ")[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = await User.findById(decoded.userId);
+    }
+  } catch {
+    // ignore invalid tokens on optional routes
+  }
+  next();
+};
+
+// ─── GENERATE TOKEN ───────────────────────────────────────────────────────────
+export const generateToken = (userId) =>
+  jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "7d" });

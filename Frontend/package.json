@@ -11,7 +11,6 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
-    "@clerk/clerk-react": "^5.61.4",
     "@tailwindcss/vite": "^4.2.1",
     "axios": "^1.15.0",
     "lucide-react": "^0.575.0",

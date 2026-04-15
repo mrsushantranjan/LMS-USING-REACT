@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { progressAPI, certificateAPI } from "../services/api";
-import { useUser } from "@clerk/clerk-react";
+import useAuth from "./useAuth";
 
 // ─── USE PROGRESS HOOK ────────────────────────────────────────────────────────
 const useProgress = (courseId) => {
-  const { isSignedIn } = useUser();
+  const { isSignedIn } = useAuth();
   const [progress,     setProgress]     = useState(null);
   const [loading,      setLoading]      = useState(true);
   const [error,        setError]        = useState(null);

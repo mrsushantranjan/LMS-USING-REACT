@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "@clerk/clerk-react";
+import useAuth from "../hooks/useAuth";
 import { toast, Slide } from "react-toastify";
 import {
   Search, SlidersHorizontal, SmilePlus,
@@ -134,7 +134,7 @@ const CourseCard = ({ course, index, userRating, onRate, onOpen }) => {
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 const CoursePage = () => {
   const navigate = useNavigate();
-  const { isSignedIn: isLoggedIn } = useUser();
+  const { isSignedIn: isLoggedIn } = useAuth();
 
   // ── State ──────────────────────────────────────────────────────────────────
   const [courses,        setCourses]        = useState([]);

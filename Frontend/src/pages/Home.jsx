@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { useClerk, UserButton, useUser } from "@clerk/clerk-react";
+import useAuth from "../hooks/useAuth";
+import { UserCircle, LogOut } from "lucide-react";
 import {
   Home, BookOpen, BookMarked, Users, Contact,
   Star, ArrowRight, CheckCircle, Sparkles, ChevronRight,
   Code2, Palette, BarChart3, Megaphone, TrendingUp,
   GraduationCap, Clock, BadgeCheck, Flame,
   Zap, Shield, Target, Heart, Play,
-  Globe, Award,
+  Globe, Award, ShieldCheck
 } from "lucide-react";
 
 // ─── STATIC DATA ──────────────────────────────────────────────────────────────
@@ -87,10 +88,8 @@ const Stars = ({ n = 5, size = 12 }) => (
 // ─── HOME PAGE ────────────────────────────────────────────────────────────────
 export default function LMSHomePage() {
   const navigate = useNavigate();
-  const { openSignUp } = useClerk();
-
-  // ✅ isLoaded prevents flash of "Create Account" when user is already signed in
-  const { isSignedIn, isLoaded } = useUser();
+  const { setAuthView, setAuthModalOpen, isSignedIn, loading, user, logout } = useAuth();
+  const isLoaded = !loading;
 
   // Navbar scroll state
   const [scrolled, setScrolled] = useState(false);
@@ -563,9 +562,30 @@ export default function LMSHomePage() {
           {!isLoaded ? (
             <div className="h-auth-skeleton" />
           ) : isSignedIn ? (
-            <div className="h-userBtn"><UserButton afterSignOutUrl="/" /></div>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              {user?.role === "admin" && (
+                <button
+                  onClick={() => navigate("/admin")}
+                  className="h-signup"
+                  style={{ display: "flex", alignItems: "center", gap: "6px", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", borderColor: "transparent", color: "white" }}
+                >
+                  <ShieldCheck size={16} /> Admin Panel
+                </button>
+              )}
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--cyan)", fontWeight: "500", fontSize: "0.9rem" }}>
+                <UserCircle size={20} />
+                <span>{user?.name?.split(" ")[0]} ({user?.role || "undefined role"})</span>
+              </div>
+              <button
+                onClick={logout}
+                className="h-signup"
+                style={{ padding: "6px 12px", background: "rgba(239, 68, 68, 0.1)", color: "#ef4444", borderColor: "rgba(239, 68, 68, 0.2)" }}
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
           ) : (
-            <button type="button" className="h-signup" onClick={() => openSignUp({})}>
+            <button type="button" className="h-signup" onClick={() => { setAuthView("register"); setAuthModalOpen(true); }}>
               Create Account
             </button>
           )}

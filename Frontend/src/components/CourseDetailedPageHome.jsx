@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "@clerk/clerk-react";
+import useAuth from "../hooks/useAuth";
 import {
   Search, SlidersHorizontal,
   User, Star, BookOpen, Tag, Loader, X,
@@ -37,7 +37,7 @@ const getCatColor = (cat) => CATEGORY_COLORS[cat] || CATEGORY_COLORS.default;
 
 export default function CourseDetailedPageHome() {
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user } = useAuth();
 
   const [courses,          setCourses]          = useState([]);
   const [loading,          setLoading]          = useState(true);

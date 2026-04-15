@@ -1,12 +1,19 @@
-const express = require("express");
-const router  = express.Router();
-const { requireAuth, syncUser } = require("../middleware/auth.middleware");
-const {
-  enrollFree, getMyEnrollments, checkEnrollment,
-} = require("../controllers/enrollment.controller");
+import express    from "express";
+import Enrollment  from "../models/enrollment.js";
+import { requireAuth } from "../middleware/auth.middleware.js";
 
-router.post("/free",        requireAuth, syncUser, enrollFree);        // POST /api/enrollment/free
-router.get("/my",           requireAuth, syncUser, getMyEnrollments);  // GET  /api/enrollment/my
-router.get("/check/:id",    requireAuth, syncUser, checkEnrollment);   // GET  /api/enrollment/check/:courseId
+const router = express.Router();
 
-module.exports = router;
+// ── GET /api/enrollments/my ───────────────────────────────────────────────────
+router.get("/my", requireAuth, async (req, res) => {
+  try {
+    const enrollments = await Enrollment.find({ user: req.user._id })
+      .populate("course")
+      .lean();
+    res.json(enrollments);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching enrollments", error: error.message });
+  }
+});
+
+export default router;

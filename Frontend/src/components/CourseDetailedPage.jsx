@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useUser } from "@clerk/clerk-react";
+import useAuth from "../hooks/useAuth";
 import {
   Play, CheckCircle, Circle, Clock, Award, ChevronDown,
   ArrowLeft, Sparkles, Lock, BookOpen, ArrowRight,
@@ -60,7 +60,7 @@ const Toast = ({ toast, onDismiss }) => {
 const CourseDetail = () => {
   const { id }     = useParams();
   const navigate   = useNavigate();
-  const { isSignedIn: isLoggedIn, user } = useUser();
+  const { isSignedIn: isLoggedIn, user } = useAuth();
 
   const [course,     setCourse]     = useState(null);
   const [loading,    setLoading]    = useState(true);

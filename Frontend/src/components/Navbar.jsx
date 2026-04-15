@@ -1,7 +1,9 @@
 import React, { useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { Home as HomeIcon, BookOpen, BookMarked, Users, Contact, GraduationCap } from "lucide-react";
-import { useAuth, useClerk, UserButton, useUser } from "@clerk/clerk-react";
+import { useNavigate } from "react-router-dom";
+import { Home as HomeIcon, BookOpen, BookMarked, Users, Contact, GraduationCap, LogOut, UserCircle, ShieldCheck } from "lucide-react";
+import useAuth from "../hooks/useAuth";
+// AuthModal will be rendered in App.jsx
 
 // FIX: Removed "import logo from '../assets/logo.png'" — no assets folder exists
 // FIX: Removed "import Home from './pages/Home'" — caused identifier clash crash
@@ -16,14 +18,13 @@ const navItems = [
 ];
 
 const Navbar = () => {
-  const { openSignUp } = useClerk();
-  const { isSignedIn } = useUser();
-  const { getToken } = useAuth();
+  const { isSignedIn, user, logout, setAuthModalOpen, setAuthView } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [lastScrollY, setlastScrollY] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showNavbar, setShowNavbar] = useState(true);
   const menuRef = useRef(null);
+  const navigate = useNavigate();
 
   const isLoggedIn = isSignedIn;
 
@@ -225,14 +226,33 @@ const Navbar = () => {
             {!isSignedIn ? (
               <button
                 type="button"
-                onClick={() => openSignUp({})}
+                onClick={() => { setAuthView("register"); setAuthModalOpen(true); }}
                 className="lms-signup-btn"
               >
                 <span>Create Account</span>
               </button>
             ) : (
-              <div className="lms-user-btn">
-                <UserButton afterSignOutUrl="/" />
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                {user?.role === "admin" && (
+                  <button
+                    onClick={() => navigate("/admin")}
+                    className="lms-signup-btn"
+                    style={{ padding: "0 12px", display: "flex", alignItems: "center", gap: "6px", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", borderColor: "transparent", color: "white" }}
+                  >
+                    <ShieldCheck size={16} /> Admin Panel
+                  </button>
+                )}
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--accent)", fontWeight: "500", fontSize: "0.9rem" }}>
+                  <UserCircle size={20} />
+                  <span>{user?.name?.split(" ")[0]}</span>
+                </div>
+                <button
+                  onClick={logout}
+                  className="lms-signup-btn"
+                  style={{ padding: "6px 12px", background: "rgba(239, 68, 68, 0.1)", color: "#ef4444", borderColor: "rgba(239, 68, 68, 0.2)" }}
+                >
+                  <LogOut size={16} />
+                </button>
               </div>
             )}
           </div>

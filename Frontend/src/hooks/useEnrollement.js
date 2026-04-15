@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { enrollmentAPI, paymentAPI } from "../services/api";
-import { useUser } from "@clerk/clerk-react";
+import useAuth from "./useAuth";
 
 // ─── USE ENROLLMENT HOOK ──────────────────────────────────────────────────────
 const useEnrollment = (courseId) => {
-  const { isSignedIn } = useUser();
+  const { isSignedIn } = useAuth();
   const [isEnrolled,  setIsEnrolled]  = useState(false);
   const [enrollment,  setEnrollment]  = useState(null);
   const [loading,     setLoading]     = useState(true);
