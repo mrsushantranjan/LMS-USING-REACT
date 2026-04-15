@@ -3,17 +3,18 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
- "homepage": "https://mrsushantranjan.github.io/LMS-USING-REACT",
-"scripts": {
-  "dev": "vite",
-  "build": "vite build",
-  "preview": "vite preview",
-  "predeploy": "npm run build",
-  "deploy": "gh-pages -d dist"
-},
+  "homepage": "https://mrsushantranjan.github.io/LMS-USING-REACT",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
   "dependencies": {
     "@clerk/clerk-react": "^5.61.4",
     "@tailwindcss/vite": "^4.2.1",
+    "axios": "^1.15.0",
     "lucide-react": "^0.575.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
